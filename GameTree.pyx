@@ -555,7 +555,7 @@ cdef class GameTree:
 		cdef uint64_t knights
 		cdef uint64_t own_pieces 
 		cdef uint64_t opponent_pieces
-		cdef uint64_t target = move.getTarget()
+		cdef uint64_t target = move.target
 		new = State(not(current.getColor()))
 		#print "number of new node children ", len(new.getChildren())
 		#new.resetChildren()
@@ -563,55 +563,55 @@ cdef class GameTree:
 
 
 		own_pieces = current.black_pieces
-		opponent_pieces = current.getWhite()
+		opponent_pieces = current.white_pieces
 
-		if(current.getColor()):
-			own_pieces = current.getWhite()
-			opponent_pieces = current.getBlack()
+		if(current.color):
+			own_pieces = current.white_pieces
+			opponent_pieces = current.black_pieces
 		
 		assert((target & own_pieces == 0) and target)
 
 		#new own pieces origin deleted and targer added
-		own_pieces = (own_pieces | move.getTarget()) & ~move.getOrigin()
+		own_pieces = (own_pieces | move.target) & ~move.origin
 
-		if(current.getColor()):
+		if(current.color):
 			#print "white making a move"
-			new.setWhite(own_pieces)
-			new.setBlack(current.getBlack())
+			new.white_pieces = (own_pieces)
+			new.black_pieces = (current.black_pieces)
 		else:
 			#print "black making a move"
-			new.setBlack(own_pieces)
-			new.setWhite(current.getWhite())
+			new.black_pieces = (own_pieces)
+			new.white_pieces = (current.white_pieces)
 
-		if(move.getPiece() == PAWN):
-			pawns = current.getPawns() | move.getTarget()
-			pawns = pawns & ~move.getOrigin()
-			new.setPawns(pawns)
+		if(move.piece == PAWN):
+			pawns = current.pawns | move.target
+			pawns = pawns & ~move.origin
+			new.pawns = (pawns)
 			#print "moving pawns"
-			new.setKnights(current.getKnights())
-			new.setRooks(current.getRooks())
-		elif(move.getPiece() == ROOK):
-			rooks = current.getRooks() | move.getTarget()
-			rooks = rooks & ~move.getOrigin()
-			new.setRooks(rooks)
+			new.knights = (current.knights)
+			new.rooks = current.rooks
+		elif(move.piece == ROOK):
+			rooks = current.rooks | move.target
+			rooks = rooks & ~move.origin
+			new.rooks = rooks
 			#print "moving rooks"
-			new.setKnights(current.getKnights())
-			new.setPawns(current.getPawns())
-		elif(move.getPiece() == KNIGHT):
-			knights = current.getKnights() | move.getTarget()
-			knights = knights & ~move.getOrigin()
-			new.setKnights(knights)
+			new.knights = (current.knights)
+			new.pawns = (current.pawns)
+		elif(move.piece == KNIGHT):
+			knights = current.knights | move.target
+			knights = knights & ~move.origin
+			new.knights = (knights)
 			#print "moving knights"
-			new.setRooks(current.getRooks())
-			new.setPawns(current.getPawns())
+			new.rooks = current.rooks
+			new.pawns = (current.pawns)
 		if(move.getCapture>0):
-			opponent_pieces = opponent_pieces & ~move.getTarget()
-			if(move.getCapture == PAWN):
-				new.setPawns(new.getPawns()& ~move.getTarget())
-			if(move.getCapture == KNIGHT):
-				new.setKnights(new.getKnights()& ~move.getTarget())
-			if(move.getCapture == ROOK):
-				new.setKnights(new.getKnights()& ~move.getTarget())
+			opponent_pieces = opponent_pieces & ~move.target
+			if(move.capture == PAWN):
+				new.pawns = (new.pawns& ~move.target)
+			if(move.capture == KNIGHT):
+				new.knights = (new.knights& ~move.target)
+			if(move.capture == ROOK):
+				new.knights = (new.knights& ~move.target)
 		#move.printMove()
 
 		return new
