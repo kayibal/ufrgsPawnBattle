@@ -140,8 +140,7 @@ Creates a mask for legal rook movements on a empty board
 Not used
 '''
 def createRookMoveMask(i,j):
-	cdef uint64_t column 
-	column = BitSet[i] | BitSet[i+8] | BitSet[i+16] | BitSet[i+24] | BitSet[i+32] | BitSet[i+40] | BitSet[i+48] | BitSet[i+56]
+	cdef uint64_t column = <uint64_t>BitSet[i] | <uint64_t>BitSet[i+8] | <uint64_t>BitSet[i+16] | <uint64_t>BitSet[i+24] | <uint64_t>BitSet[i+32] | <uint64_t>BitSet[i+40] | <uint64_t>BitSet[i+48] | <uint64_t>BitSet[i+56]
 	cdef uint64_t row = 255 << j*8
 	return column ^ row
 '''

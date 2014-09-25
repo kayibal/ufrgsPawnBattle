@@ -20,7 +20,7 @@ g.alphaBeta(s,3,-200,200,True)
 print len(s.getChildren())
 s2 = s.getBestMove()
 s2.printState()
-print g.getCount()
+#print g.getCount()
 
 
 '''

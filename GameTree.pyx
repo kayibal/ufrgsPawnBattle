@@ -30,7 +30,10 @@ cdef class State:
 	#---------------------------
 	#no problem with this being a list or even slow will be used only at the end
 	#adding need to be fast
+
+	#TODO: make this a c list
 	children = []
+	
 	def __init__(self, bint color):
 		self.color = color
 		self.child_count = 0
@@ -508,7 +511,7 @@ cdef class GameTree:
 				self.white_pawn_move[no] = bb.createPawnMoveMask(i,j,True)
 				self.black_pawn_move[no] = bb.createPawnMoveMask(i,j,False)
 				#rooks
-				self.rook_move[no] = bb.createRookMoveMask(i,j)
+				#self.rook_move[no] = bb.createRookMoveMask(i,j)
 				#knights
 				self.knight_move[no] = bb.createKnightMoveMask(i,j)
 
