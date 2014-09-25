@@ -203,8 +203,8 @@ def getLineMovesEast(uint64_t all_pieces, int sqno, int n):
 def rotate180(uint64_t bb):
 	return mirrorH(flipV(bb))
 
-def flipV(uint64_t x):
-	return  ( (x << 56) ) | ( (x << 40) & 0x00ff000000000000 ) | ( (x << 24) & 0x0000ff0000000000 ) |( (x <<  8) & 0x000000ff00000000 ) |( (x >>  8) & 0x00000000ff000000 ) |( (x >> 24) & 0x0000000000ff0000 ) | ( (x >> 40) & 0x000000000000ff00 ) |( (x >> 56) )
+cdef flipV(uint64_t x):
+	return <uint64_t>( (x << 56) ) | ( (x << 40) & 0x00ff000000000000 ) | ( (x << 24) & 0x0000ff0000000000 ) |( (x <<  8) & 0x000000ff00000000 ) |( (x >>  8) & 0x00000000ff000000 ) |( (x >> 24) & 0x0000000000ff0000 ) | ( (x >> 40) & 0x000000000000ff00 ) |( (x >> 56) )
 
 def mirrorH(uint64_t x):
 	x = ((x >> 1) & k1) | ((x & k1) << 1)
@@ -212,10 +212,10 @@ def mirrorH(uint64_t x):
 	x = ((x >> 4) & k4) | ((x & k4) << 4)
 	return x
 
-def getFileMask(int i):
+cdef getFileMask(int i):
 	cdef uint64_t column
 	if (i>=0 and i<=7):
-		column = BitSet[i] | BitSet[i+8] | BitSet[i+16] | BitSet[i+24] | BitSet[i+32] | BitSet[i+40] | BitSet[i+48] | BitSet[i+56]
+		column = <uint64_t>BitSet[i] | <uint64_t>BitSet[i+8] | <uint64_t>BitSet[i+16] | <uint64_t>BitSet[i+24] | <uint64_t>BitSet[i+32] | <uint64_t>BitSet[i+40] | <uint64_t>BitSet[i+48] | <uint64_t>BitSet[i+56]
 		return column
 	else:
 		return 0
