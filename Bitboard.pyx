@@ -120,19 +120,19 @@ def createPawnAttackMask(int i, int j, bint color):
 	if (j>=1 and j<=6 and i >= 1 and i<=6):
 		if(color):
 			#white
-			mask = BitSet[getSquareNo(i-1,j+1)] | BitSet[getSquareNo(i+1,j+1)]
+			mask = <uint64_t>BitSet[getSquareNo(i-1,j+1)] | <uint64_t>BitSet[getSquareNo(i+1,j+1)]
 		else:
-			mask = BitSet[getSquareNo(i-1,j-1)] | BitSet[getSquareNo(i+1,j-1)]
+			mask = <uint64_t>BitSet[getSquareNo(i-1,j-1)] | <uint64_t>BitSet[getSquareNo(i+1,j-1)]
 	if(i==0):
 		if(color):
-			mask = BitSet[getSquareNo(i+1,j+1)]
+			mask = <uint64_t>BitSet[getSquareNo(i+1,j+1)]
 		else:
-			mask = BitSet[getSquareNo(i+1,j-1)]
+			mask = <uint64_t>BitSet[getSquareNo(i+1,j-1)]
 	if (i== 7):
 		if(color):
-			mask = BitSet[getSquareNo(i-1,j+1)]
+			mask = <uint64_t>BitSet[getSquareNo(i-1,j+1)]
 		else:
-			mask = BitSet[getSquareNo(i-1,j-1)]
+			mask = <uint64_t>BitSet[getSquareNo(i-1,j-1)]
 	return mask
 
 '''
@@ -145,6 +145,7 @@ def createRookMoveMask(i,j):
 	return column ^ row
 '''
 very dirty hack to convert an variable to because python throws an error
+not used
 '''
 def makeU(n):
 	cdef uint64_t result = 0
@@ -158,24 +159,24 @@ still buggy for example for 0,1,8
 '''
 def getRookMoveMask(uint64_t all_pieces, int sqno):
 	i,j = getSquare(sqno)
-	cdef uint64_t row_mask = (255 << j*8)
+	cdef uint64_t row_mask = <uint64_t>(<uint64_t>255 << j*8)
 	cdef uint64_t current_pos = BitSet[sqno]
 	cdef uint64_t temp = <uint64_t> (<uint64_t>bitReversal(all_pieces)- <uint64_t>bitReversal(current_pos))
 	cdef uint64_t temp2 = <uint64_t>(temp - <uint64_t>bitReversal(current_pos))
 	cdef uint64_t line_moves = row_mask & (all_pieces - 2*current_pos ^ <uint64_t>bitReversal(temp2))
 	#cdef line_moves_east = (all_pieces - 2*current_pos) ^ all_pieces
 
-	cdef uint64_t file_moves_north = getFileMoves(all_pieces, sqno)
+	cdef uint64_t file_moves_north = <uint64_t>getFileMoves(all_pieces, sqno)
 	sqno_f = getSquareNo(i,7-j)
-	cdef uint64_t all_pieces_f = flipV(all_pieces)
+	cdef uint64_t all_pieces_f = <uint64_t>flipV(all_pieces)
 
-	cdef uint64_t file_moves_south = flipV( getFileMoves(all_pieces_f, sqno_f) )
+	cdef uint64_t file_moves_south = <uint64_t>flipV( getFileMoves(all_pieces_f, sqno_f) )
 
 	return line_moves | file_moves_south | file_moves_north
 
-def getFileMoves(uint64_t all_pieces, int sqno):
-	cdef uint64_t current_pos = BitSet[sqno]
-	cdef uint64_t fm = getFileMask(sqno%8)
+cdef uint64_t getFileMoves(uint64_t all_pieces, int sqno):
+	cdef uint64_t current_pos = <uint64_t>BitSet[sqno]
+	cdef uint64_t fm = <uint64_t>getFileMask(sqno%8)
 	cdef uint64_t temp = <uint64_t> ((all_pieces & fm) - 2*current_pos)
 	cdef uint64_t file_moves_north =  (temp ^ all_pieces) & fm
 	return file_moves_north
