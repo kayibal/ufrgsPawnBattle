@@ -4,10 +4,45 @@ import Bitboard as bb
 from libc.stdint cimport uint64_t
 from random import randrange
 
+
 cdef enum:
 	PAWN = 1
 	KNIGHT = 2
 	ROOK = 4
+
+cdef np.ndarray pw_pos = np.array([ 
+0,  0,  0,  0,  0,  0,  0,  0,
+50, 50, 50, 50, 50, 50, 50, 50,
+10, 10, 20, 30, 30, 20, 10, 10,
+ 5,  5, 10, 25, 25, 10,  5,  5,
+ 0,  0,  0, 20, 20,  0,  0,  0,
+ 5, -5,-10,-20,-20,-10, -5,  5,
+ 5, 10, 10,-20,-20, 10, 10,  5,
+ 0,  0,  0,  0,  0,  0,  0,  0
+])
+cdef np.ndarray pb_pos = pw_pos[::-1]
+cdef np.ndarray k_pos = np.array([
+-50,-40,-30,-30,-30,-30,-40,-50,
+-40,-20,  0,  0,  0,  0,-20,-40,
+-30,  0, 10, 15, 15, 10,  0,-30,
+-30,  5, 15, 20, 20, 15,  5,-30,
+-30,  0, 15, 20, 20, 15,  0,-30,
+-30,  5, 10, 15, 15, 10,  5,-30,
+-40,-20,  0,  5,  5,  0,-20,-40,
+-50,-40,-30,-30,-30,-30,-40,-50,
+])
+cdef np.ndarray kb_pos = k_pos[::-1]
+cdef np.ndarray r_pos = np.array([ 
+ 0,  0,  0,  0,  0,  0,  0,  0,
+  5, 10, 10, 10, 10, 10, 10,  5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+  0,  0,  0,  5,  5,  0,  0,  0
+])
+cdef np.ndarray rb_pos = r_pos[::-1]
 
 cdef class State:
 	#using bitboards so chessboard can be represented with 40 bytes
@@ -54,6 +89,46 @@ cdef class State:
 		self.rooks = 1 | 1<<7 | 1<<56 | 1<<63
 		self.white_pieces = self.white_pieces | 1 | 1<<7
 		self.black_pieces = self.black_pieces | 1<<56 | 1<<63
+
+	def loadState(self, board):
+		cdef int i = 0
+		cdef int j
+		cdef int sqno 
+		#loop through rows
+		for j in range(8):
+			sqno = 56 - (j*8)
+			for k in range(8):
+				print sqno
+				
+				if(board[i] != '.'):
+					if(board[i] == 'P'):
+						#add white pawn
+						self.white_pieces = self.white_pieces | <uint64_t> bb.bitSet(sqno)
+						self.pawns = self.pawns | <uint64_t> bb.bitSet(sqno)
+					elif(board[i] == 'p'):
+						#add black pawn
+						self.black_pieces = self.black_pieces | <uint64_t> bb.bitSet(sqno)
+						self.pawns = self.pawns | <uint64_t> bb.bitSet(sqno)
+					elif(board[i] == 'N'):
+						#add black knight
+						self.black_pieces = self.black_pieces | <uint64_t> bb.bitSet(sqno)
+						self.knights = self.knights | <uint64_t> bb.bitSet(sqno)
+					elif(board[i] == 'n'):
+						#add black knight
+						self.black_pieces = self.black_pieces | <uint64_t> bb.bitSet(sqno)
+						self.knights = self.knights | <uint64_t> bb.bitSet(sqno)
+					elif(board[i] == 'R'):
+						#add black knight
+						self.black_pieces = self.black_pieces | <uint64_t> bb.bitSet(sqno)
+						self.rooks = self.rooks | <uint64_t> bb.bitSet(sqno)
+					elif(board[i] == 'r'):
+						#add black knight
+						self.black_pieces = self.black_pieces | <uint64_t> bb.bitSet(sqno)
+						self.rooks = self.rooks | <uint64_t> bb.bitSet(sqno)
+				sqno += 1
+				i += 1
+
+
 
 	def getPawns(self):
 		return self.pawns
@@ -103,9 +178,52 @@ cdef class State:
 		return self.children[i]
 
 	def evaluateState(self):
-		r = randrange(100)
-		#print "evaluates to:", r
-		return r
+		cdef int score = 0
+		cdef uint64_t own_pieces = self.black_pieces
+		if(self.color):
+			own_pieces = self.white_pieces
+		
+		cdef uint64_t pawns = own_pieces & self.pawns
+		cdef uint64_t knights = own_pieces & self.knights
+		cdef uint64_t rooks = own_pieces & self.rooks
+
+		cdef int k = bb.popcount(knights)
+		cdef int p = bb.popcount(pawns)
+		cdef int r = bb.popcount(rooks)
+
+		cdef int material = p*100 + k*300*(1+p/16) + r*1000*(1-(p/16))
+		cdef int position = 0
+
+		cdef int sqno = 0
+		while(pawns):
+			sqno = bb.bitScanForward(pawns)
+			if(self.color):
+				position += pw_pos[63-sqno]
+			else:
+				position += pb_pos[63-sqno]
+			pawns = pawns & (pawns-1)
+		while(knights):
+			sqno = bb.bitScanForward(knights)
+			if(self.color):
+				position += k_pos[63-sqno]
+			else:
+				position += kb_pos[63-sqno]
+			knights = knights & (knights-1)
+		while(rooks):
+			sqno = bb.bitScanForward(rooks)
+			if(self.color):
+				position += r_pos[63-sqno]
+			else:
+				position += rb_pos[63-sqno]
+			rooks = rooks & (rooks-1)
+
+		score = material + position
+
+		if(self.color):
+			return score
+		else:
+			return -1*score
+
 	def getValue(self):
 		return self.value
 	def setValue(self,int v):
@@ -131,26 +249,28 @@ cdef class State:
 		while(rooks):
 			sqno = bb.bitScanForward(rooks)
 			if(self.black_pieces & <uint64_t>bb.bitSet(sqno)):
-				board[sqno] = 'R'
-			else:
 				board[sqno] = 'r'
+			else:
+				board[sqno] = 'R'
 			rooks = rooks & (rooks-1)
+
 		while(pawns):
 			sqno = bb.bitScanForward(pawns)
 			if(self.black_pieces & <uint64_t>bb.bitSet(sqno)):
-				board[sqno] = 'P'
-			else:
 				board[sqno] = 'p'
+			else:
+				board[sqno] = 'P'
 			pawns = pawns & (pawns-1)
+
 		while(knights):
 			sqno = bb.bitScanForward(knights)
 			if(self.black_pieces & <uint64_t>bb.bitSet(sqno)):
-				board[sqno] = 'K'
-			else:
 				board[sqno] = 'k'
+			else:
+				board[sqno] = 'K'
 			knights = knights & (knights-1)
 
-
+		board.reverse()
 		bitboard = ''.join(board)
 		print '  --------------------------------'
 		for i in range(8):
@@ -209,7 +329,16 @@ cdef class Move:
 		return self.target
 	def getCapture(self):
 		return self.capture
+	def getFrom(self):
+		sqno = bb.bitScanForward(self.origin)
+		return bb.getSquare(sqno)
+	def getTo(self):
+		sqno = bb.bitScanForward(self.target)
+		return bb.getSquare(sqno)
 
+#TODO save built tree in this class
+#do not rebuild whole tree but start in leave nodes
+#add transposition table and killer moves
 
 cdef class GameTree:
 	cdef State root
@@ -418,7 +547,7 @@ cdef class GameTree:
 				#self.count += 1
 			return beta
 
-			
+	#todo replace all get functions with direct access
 	def makeMove(self, State current, Move move):
 		cdef State new
 		cdef uint64_t rooks
@@ -432,15 +561,17 @@ cdef class GameTree:
 		#new.resetChildren()
 		new.setMove(move)
 
-		assert((target & own_pieces == 0) and target)
 
-		own_pieces = current.getBlack()
+		own_pieces = current.black_pieces
 		opponent_pieces = current.getWhite()
 
 		if(current.getColor()):
 			own_pieces = current.getWhite()
 			opponent_pieces = current.getBlack()
 		
+		assert((target & own_pieces == 0) and target)
+
+		#new own pieces origin deleted and targer added
 		own_pieces = (own_pieces | move.getTarget()) & ~move.getOrigin()
 
 		if(current.getColor()):

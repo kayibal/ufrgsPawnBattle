@@ -11,15 +11,22 @@ import Bitboard as bb
 #bb.printBitBoard(m)
 
 #all = pow(2,17) + pow(2,22) + pow(2,43) + pow(2,3) + pow(2,19)
-s = gt.State(True)
+s = gt.State(False)
 s.createStartConfig()
-g = gt.GameTree(True)
+g = gt.GameTree(False)
 #s.printState()
 print len(s.getChildren())
-g.alphaBeta(s,3,-200,200,True)
+g.alphaBeta(s,3,-200000,200000,False)
 print len(s.getChildren())
 s2 = s.getBestMove()
 s2.printState()
+bb.printBitBoard(s2.getBlack())
+
+'''
+s = gt.State(True)
+s.loadState("rn....nrpppppppp................................PPPPPPPPRN....NR")
+s.printState()
+'''
 #print g.getCount()
 
 
