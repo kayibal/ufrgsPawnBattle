@@ -2,7 +2,6 @@ import numpy as np
 cimport numpy as np
 import Bitboard as bb
 from libc.stdint cimport uint64_t
-import bitops
 from random import randrange
 
 cdef enum:
@@ -131,21 +130,21 @@ cdef class State:
 
 		while(rooks):
 			sqno = bb.bitScanForward(rooks)
-			if(self.black_pieces & bb.bitSet(sqno)):
+			if(self.black_pieces & <uint64_t>bb.bitSet(sqno)):
 				board[sqno] = 'R'
 			else:
 				board[sqno] = 'r'
 			rooks = rooks & (rooks-1)
 		while(pawns):
 			sqno = bb.bitScanForward(pawns)
-			if(self.black_pieces & bb.bitSet(sqno)):
+			if(self.black_pieces & <uint64_t>bb.bitSet(sqno)):
 				board[sqno] = 'P'
 			else:
 				board[sqno] = 'p'
 			pawns = pawns & (pawns-1)
 		while(knights):
 			sqno = bb.bitScanForward(knights)
-			if(self.black_pieces & bb.bitSet(sqno)):
+			if(self.black_pieces & <uint64_t>bb.bitSet(sqno)):
 				board[sqno] = 'K'
 			else:
 				board[sqno] = 'k'
@@ -305,7 +304,7 @@ cdef class GameTree:
 		while(pawns):
 			#get data
 			current_sq_no = bb.bitScanForward(pawns)
-			current_pos = bb.bitSet(current_sq_no)
+			current_pos = <uint64_t>bb.bitSet(current_sq_no)
 			move_mask = pawn_movements[current_sq_no]
 			attack_mask = pawn_attacks[current_sq_no]
 
@@ -336,7 +335,7 @@ cdef class GameTree:
 		#knight movements
 		while(knights):
 			current_square_no = bb.bitScanForward(knights)
-			current_pos = bb.bitSet(current_square_no)
+			current_pos = <uint64_t>bb.bitSet(current_square_no)
 			move_mask = self.knight_move[current_square_no]
 
 			move_mask = move_mask & ~(own_pieces)
@@ -356,7 +355,7 @@ cdef class GameTree:
 
 		while(rooks):
 			current_square_no = bb.bitScanForward(rooks)
-			current_pos = bb.bitSet(current_square_no)
+			current_pos = <uint64_t>bb.bitSet(current_square_no)
 			move_mask = bb.getRookMoveMask(all_pieces,current_square_no)
 			#cannot capture own pieces
 			move_mask = ~own_pieces & move_mask
@@ -491,7 +490,7 @@ cdef class GameTree:
 		cdef uint64_t target
 		while(move_mask):
 			#get possible move
-			target = bb.bitSet(bb.bitScanForward(move_mask))
+			target = <uint64_t>bb.bitSet(bb.bitScanForward(move_mask))
 			m = Move(piece, current_pos, target, capture)
 			moves.append(m)
 			#delete this move
